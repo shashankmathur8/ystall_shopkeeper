@@ -23,7 +23,7 @@ class Seller{
     late String num;
     @HiveField(8)
     late double long;
-    @HiveField(8)
+    @HiveField(9)
     late double latte;
 
     Seller(this.id,this.name, this.address, this.time, this.range, this.email, this.pass,this.num,this.long,this.latte);

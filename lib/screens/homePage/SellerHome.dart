@@ -329,12 +329,12 @@ class _SellerHomeState extends State<SellerHome> {
 
   }
   void deleteProducts (String id,String image) async{
-    api.deleteProduct(id);
-    print(image);
-    await MyApp.ftpConnect.deleteFile(image);
     setState(() {
       products.removeWhere((product) => product.id == id);
     });
+    api.deleteProduct(id);
+    await MyApp.ftpConnect.deleteFile(image);
+
 
   }
 

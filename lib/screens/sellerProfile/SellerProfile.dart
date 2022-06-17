@@ -39,14 +39,15 @@ class SellerProfile extends StatelessWidget {
               bgColor: Colors.white,
               size: 75,),
             AccountWidget(appicon: IconButton(icon: appIcon(icon: Icons.account_box,iconColor: Colors.deepOrangeAccent,),onPressed: ()=>{
-              _displayDialog(context,"email")
+             // _displayDialog(context,"email")
+              logout(context)
             },), bigtext: bigText(stringText: this.curseller.email)),
             AccountWidget(appicon: IconButton(icon: appIcon(icon: Icons.home,iconColor: Colors.deepOrangeAccent,),onPressed: ()=>{
               _displayDialog(context,"address")
             },), bigtext: bigText(stringText: (this.curseller.address).split(",")[0])),
             AccountWidget(appicon: IconButton(icon: appIcon(icon: Icons.phone_enabled,iconColor: Colors.deepOrangeAccent,),onPressed: () {
               _displayDialog(context,"number");
-            },), bigtext: bigText(stringText: curseller.num)),
+            },), bigtext: bigText(stringText: this.curseller.num)),
             AccountWidget(appicon: IconButton(icon: appIcon(icon: Icons.account_box_outlined,iconColor: Colors.deepOrangeAccent,),onPressed: () {
               Navigator.of(context).push(MaterialPageRoute(builder: (context)=> OrdersScreen(this.curseller)));
             },), bigtext: bigText(stringText: "Orders")),
