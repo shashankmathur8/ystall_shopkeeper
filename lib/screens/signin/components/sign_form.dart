@@ -125,8 +125,9 @@ class _SignFormState extends State<SignForm> {
                 if(remember){
                   hivebox.put('email', email);
                   hivebox.put('pass', password);
+                  hivebox.put('seller', curSeller);
                 }
-                Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=> SellerHome(selleremail: this.curSeller.email)));
+                Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=> SellerHome(selleremail: this.curSeller.email,curseller: this.curSeller,)));
               }else{
                 print('Wrong Password');
               }

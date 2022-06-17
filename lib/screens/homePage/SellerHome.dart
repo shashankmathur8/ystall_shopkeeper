@@ -4,6 +4,8 @@ import 'dart:collection';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:geocoder/geocoder.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ystall_shopkeeper/dimensions.dart';
@@ -33,11 +35,12 @@ import 'package:flutter/cupertino.dart';
 class SellerHome extends StatefulWidget {
   static String routeName = "/sellerhome";
   String selleremail="";
+  Seller curseller;
 
-   SellerHome({Key? key,required this.selleremail}) : super(key: key);
+   SellerHome({Key? key,required this.selleremail,required this.curseller}) : super(key: key);
 
   @override
-  State<SellerHome> createState() => _SellerHomeState(selleremail);
+  State<SellerHome> createState() => _SellerHomeState(selleremail,curseller);
 }
 
 class _SellerHomeState extends State<SellerHome> {
@@ -47,14 +50,13 @@ class _SellerHomeState extends State<SellerHome> {
   String newProductName="";
   String isUplopading="true";
   String newProductDesc="";
-  late Box hivebox;
   late Future<List<Products>> productsMain;
   var value="";
   late Future<Seller> dataFuture;
   @override
   void initState(){
     super.initState();
-
+    getLoc();
     dataFuture= waitforSeller();
     productsMain= _loadProducts();
   }
@@ -295,20 +297,22 @@ class _SellerHomeState extends State<SellerHome> {
   SellerApi api = SellerApi();
   late var UploadDone;
   String sellerEmail;
+
+  late String address;
+  var longe;
+  var latte;
   List<Products> products=[];
   List<Seller> sellers=[];
   late Seller  curseller;
 
 
-  _SellerHomeState(this.sellerEmail);
+  _SellerHomeState(this.sellerEmail, this.curseller);
   Future<List<Products>> _loadProducts() async {
     await api.getProductsbyUser(sellerEmail).then((data) {
       setState(() {
         products = data;
       });
     });
-    int x = products.length;
-    HashMap hashMap = new HashMap<int,dynamic>();
 
     return products;
   }
@@ -320,33 +324,28 @@ class _SellerHomeState extends State<SellerHome> {
   }
 
   Future<Seller> waitforSeller() async{
-    createBox();
-    await api.getContacts().then((value) => {
-      setState((){
-        sellers=value;
-      })
-    });
-    for(Seller x in sellers){
-      if(x.email == sellerEmail){
-        if(this.mounted){
-          setState(() {
-            curseller=x;
-          });
-        }
-      }
-    }
-    return curseller;
+    return this.curseller;
 
 
   }
   void deleteProducts (String id,String image) async{
     api.deleteProduct(id);
     print(image);
-    MyApp.ftpConnect.deleteFile(image);
+    await MyApp.ftpConnect.deleteFile(image);
     setState(() {
       products.removeWhere((product) => product.id == id);
     });
 
+  }
+
+  void getLoc() async{
+    Position position = await Geolocator().getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    final coordinates = new Coordinates(position.latitude, position.longitude);
+    var addresses = await Geocoder.local.findAddressesFromCoordinates(coordinates);
+    var first = addresses.first;
+    this.address=first.addressLine;
+    this.longe=position.longitude;
+    this.latte=position.latitude;
   }
 
   void _addProduct(String ProductName,String Price,String Quantity , String sellerName ,String desc,var image) async {
@@ -364,11 +363,11 @@ class _SellerHomeState extends State<SellerHome> {
     });
   }
 
-  Future<void> UploadImage(productImage) async {
+  Future<void> UploadImage(productImage, BuildContext xyzcontext) async {
     setState(() {
       this.isUplopading="false";
     });
-    UploadDone = this.api.uploadImage(productImage);
+    UploadDone = this.api.uploadImage(productImage).then((value) => UploadDone=value);
     setState(() {
       this.isUplopading="true";
     });
@@ -415,7 +414,7 @@ class _SellerHomeState extends State<SellerHome> {
                         children: [
                           IconButton(iconSize: 40,onPressed: ()=>{
                             //Goto Seller Profile page
-                          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=> SellerProfile(email:curseller.email,address:curseller.address)))
+                          Navigator.of(context).push(MaterialPageRoute(builder: (context)=> SellerProfile(curseller: this.curseller,locAdd: this.address,long: this.longe,latte: this.latte,)))
 
                           }, icon: appIcon(icon: Icons.person))
 
@@ -627,15 +626,35 @@ class _SellerHomeState extends State<SellerHome> {
   }
 
   Future<void> getImage() async {
+    checkUpload(false,context);
+
     var image = await ImagePicker.pickImage(source: ImageSource.gallery);
     ProductImage=image;
 
-    UploadImage(image);
+    await UploadImage(image,context);
+    await Future.delayed(const Duration(seconds: 2), (){});
+    checkUpload(true,context);
 
   }
+  checkUpload(bool isUploadDone,BuildContext context){
+    if(isUploadDone==false){
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false, // user must tap button!
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Upload Is in Process'),
+            content: SingleChildScrollView(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        },
+      );
+    }
+    else{
+      Navigator.of(context).pop();
+    }
 
-  Future<void> createBox() async {
-    this.hivebox = await Hive.openBox('loginData');
   }
 
 }

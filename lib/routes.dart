@@ -13,6 +13,4 @@ final Map<String, WidgetBuilder> routes = {
   SplashScreen.routeName: (context) => SplashScreen(),
   SignUpScreen.routeName:(context) => SignUpScreen(),
   LoginSuccessScreen.routeName: (context) => LoginSuccessScreen(),
-  SellerHome.routeName:(context) => SellerHome(selleremail: ""),
-  SellerProfile.routeName:(context) => SellerProfile(email: "",address: "",),
 };

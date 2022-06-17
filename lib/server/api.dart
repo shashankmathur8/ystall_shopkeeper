@@ -4,6 +4,7 @@ import 'package:path/path.dart';
 import 'package:dio/dio.dart';
 import 'package:ftpconnect/ftpconnect.dart';
 import 'package:ystall_shopkeeper/main.dart';
+import 'package:ystall_shopkeeper/models/orders.dart';
 import 'package:ystall_shopkeeper/models/products.dart';
 
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -24,6 +25,27 @@ class SellerApi {
         .map<Seller>((json) => Seller.fromJson(json))
         .toList();
   }
+
+  Future<List<Orders>> getOrders() async {
+    final response = await _dio.get('/orders');
+    return (response.data['orders'] as List)
+        .map<Orders>((json) => Orders.fromJson(json))
+        .toList();
+  }
+
+  Future<void> updateEmail(String newEmail, String prevEmail) async {
+    final response = await _dio.post('/SellerEmail/${prevEmail}', data: {'email': newEmail});
+    return response.data;
+  }
+  Future<void> updateAddress(String newAdd, String prevEmail,double long,double latte) async {
+    final response = await _dio.post('/SellerAddress/${prevEmail}', data: {'address': newAdd,"long":long,"latte":latte});
+    return response.data;
+  }
+  Future<void> updateNumber(String newNumber, String prevEmail) async {
+    final response = await _dio.post('/SellerNum/${prevEmail}', data: {'num': newNumber});
+    return response.data;
+  }
+
   Future<List<Products>> getProducts() async {
     final response = await _dio.get('/products');
     return (response.data['products'] as List)
@@ -37,8 +59,8 @@ class SellerApi {
         .toList();
   }
 
-  Future<Seller> createContact(String name,String email,String password) async {
-    final response = await _dio.post('/selleradd', data: {'name': name,"email":email,"pass":password,"address":"Vaisahli Nagar","range":"5","time":"20"});
+  Future<Seller> createContact(String name,String email,String password,String address, var long,var latte,String phone) async {
+    final response = await _dio.post('/selleradd', data: {'name': name,"email":email,"pass":password,"address":address,"range":"5","time":"20","long":long,"latte":latte,"num":phone});
     return Seller.fromJson(response.data);
   }
   Future<String> uploadImage(var image)async {

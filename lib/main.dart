@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ftpconnect/ftpconnect.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
+import 'package:ystall_shopkeeper/models/seller.dart';
 import 'package:ystall_shopkeeper/routes.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:hive/hive.dart';
@@ -10,10 +11,13 @@ import 'package:ystall_shopkeeper/screens/splash/splash_screen.dart';
 void main() async {
   await Hive.initFlutter();
   WidgetsFlutterBinding.ensureInitialized();
+  Hive.registerAdapter(SellerAdapter());
   runApp( MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  late Seller curSeller;
+
    MyApp({Key? key}) : super(key: key);
 
   // This widget is the root of your application.
@@ -58,7 +62,7 @@ class MyApp extends StatelessWidget {
                   primarySwatch: Colors.blue,
                 ),
                 routes: routes,
-                home: SellerHome(selleremail: email,),
+                home: SellerHome(selleremail: email,curseller: this.curSeller),
               );
             }
             else{
@@ -98,6 +102,11 @@ class MyApp extends StatelessWidget {
 
   Future<dynamic> mainScreen() async {
     Box hivebox= await Hive.openBox('loginData');
+    if(hivebox.get("seller")!=null){
+      Seller seller= hivebox.get("seller");
+      this.curSeller=seller;
+      print(seller.name);
+    }
     email= hivebox.get("email");
     pass = hivebox.get("pass");
 
