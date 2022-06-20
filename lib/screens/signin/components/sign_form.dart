@@ -120,8 +120,11 @@ class _SignFormState extends State<SignForm> {
             text: "Continue",
             press: () {
                 // make call to using api
+
               bool valid=checkValidityEmail(email!,password!);
               if(valid){
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Login Success"),));
+
                 if(remember){
                   hivebox.put('email', email);
                   hivebox.put('pass', password);
@@ -129,7 +132,8 @@ class _SignFormState extends State<SignForm> {
                 }
                 Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=> SellerHome(selleremail: this.curSeller.email,curseller: this.curSeller,)));
               }else{
-                print('Wrong Password');
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Wrong Password"),));
+
               }
 
             },

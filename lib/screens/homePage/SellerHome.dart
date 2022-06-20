@@ -52,12 +52,13 @@ class _SellerHomeState extends State<SellerHome> {
   String newProductDesc="";
   late Future<List<Products>> productsMain;
   var value="";
-  late Future<Seller> dataFuture;
+  late Future<String> dataFuture;
+  late Future<String> dfString;
   @override
   void initState(){
     super.initState();
-    getLoc();
-    dataFuture= waitforSeller();
+    dataFuture=getLoc();
+    waitforSeller();
     productsMain= _loadProducts();
   }
 
@@ -338,14 +339,15 @@ class _SellerHomeState extends State<SellerHome> {
 
   }
 
-  void getLoc() async{
-    Position position = await Geolocator().getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+  Future<String> getLoc() async{
+    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
     final coordinates = new Coordinates(position.latitude, position.longitude);
     var addresses = await Geocoder.local.findAddressesFromCoordinates(coordinates);
     var first = addresses.first;
     this.address=first.addressLine;
     this.longe=position.longitude;
     this.latte=position.latitude;
+    return "location done";
   }
 
   void _addProduct(String ProductName,String Price,String Quantity , String sellerName ,String desc,var image) async {
@@ -527,7 +529,8 @@ class _SellerHomeState extends State<SellerHome> {
                                                     color: Colors.black26,
                                                     border: Border.all(color: Colors.black),
                                                     image: DecorationImage(fit: BoxFit.fill,
-                                                        image:NetworkImage("http://ystall.com/assets/imgs/" +products[index].image ))),
+                                                        image:
+                                                        NetworkImage("http://ystall.com/assets/imgs/" +products[index].image ))),
 
 
                                               ),

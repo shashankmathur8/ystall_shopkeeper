@@ -39,8 +39,7 @@ class SellerProfile extends StatelessWidget {
               bgColor: Colors.white,
               size: 75,),
             AccountWidget(appicon: IconButton(icon: appIcon(icon: Icons.account_box,iconColor: Colors.deepOrangeAccent,),onPressed: ()=>{
-             // _displayDialog(context,"email")
-              logout(context)
+              _displayDialog(context,"email")
             },), bigtext: bigText(stringText: this.curseller.email)),
             AccountWidget(appicon: IconButton(icon: appIcon(icon: Icons.home,iconColor: Colors.deepOrangeAccent,),onPressed: ()=>{
               _displayDialog(context,"address")

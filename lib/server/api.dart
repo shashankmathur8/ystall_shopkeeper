@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:flutter/cupertino.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:path/path.dart';
 import 'package:dio/dio.dart';
 import 'package:ftpconnect/ftpconnect.dart';
@@ -8,6 +10,7 @@ import 'package:ystall_shopkeeper/models/orders.dart';
 import 'package:ystall_shopkeeper/models/products.dart';
 
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:ystall_shopkeeper/models/users.dart';
 
 
 import '../models/seller.dart';
@@ -52,6 +55,35 @@ class SellerApi {
         .map<Products>((json) => Products.fromJson(json))
         .toList();
   }
+
+  TriggerDistanceBuild() async{
+    List<Seller> selList= await this.getContacts();
+    List<User> userList= await this.getUsers();
+    var data = Map();
+
+    for(var usr in userList){
+      for(Seller temo in selList){
+        var distance= await Geolocator.distanceBetween(temo.long, temo.latte,usr.long, usr.latte);
+        data[temo.email]=distance;
+      }
+      this.saveDistanceMap(data,usr.email);
+    }
+
+  }
+
+  saveDistanceMap(var x,String email) async {
+
+    final response = await _dio.post('/updateDistanceMap/$email', data: {"email":email,"distanceMap":x});
+
+  }
+
+  Future<List<User>> getUsers() async {
+    final response = await _dio.get('/getUsers');
+    return (response.data['users'] as List)
+        .map<User>((json) => User.fromJson(json))
+        .toList();
+  }
+
   Future<List<Products>> getProductsbyUser(String email) async {
     final response = await _dio.get('/products/${email}');
     return (response.data['products'] as List)
@@ -61,12 +93,13 @@ class SellerApi {
 
   Future<Seller> createContact(String name,String email,String password,String address, var long,var latte,String phone) async {
     final response = await _dio.post('/selleradd', data: {'name': name,"email":email,"pass":password,"address":address,"range":"5","time":"20","long":long,"latte":latte,"num":phone});
+    TriggerDistanceBuild();
     return Seller.fromJson(response.data);
   }
   Future<String> uploadImage(var image)async {
     await MyApp.ftpConnect.connect();
     bool res = await MyApp.ftpConnect.uploadFile(image);
-    return "upload Done";
+    return res.toString();
   }
   Future<Products> createProduct(
       String productName,
