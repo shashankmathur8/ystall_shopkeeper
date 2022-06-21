@@ -1,13 +1,18 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+
+import 'package:geocoding/geocoding.dart' as gcode;
 import 'package:flutter/services.dart';
-import 'package:geocoder/geocoder.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:get/get_utils/get_utils.dart';
 import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:ystall_shopkeeper/dimensions.dart';
 import 'package:ystall_shopkeeper/main.dart';
 import 'package:ystall_shopkeeper/models/products.dart';
@@ -60,6 +65,15 @@ class _SellerHomeState extends State<SellerHome> {
     dataFuture=getLoc();
     waitforSeller();
     productsMain= _loadProducts();
+    ProductImage=getImageFileFromAssets("images/placeholder.png");
+  }
+  Future<File> getImageFileFromAssets(String path) async {
+    final byteData = await rootBundle.load('assets/$path');
+
+    final file = File('${(await getTemporaryDirectory()).path}/$path');
+    await file.writeAsBytes(byteData.buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+
+    return file;
   }
 
 
@@ -341,10 +355,9 @@ class _SellerHomeState extends State<SellerHome> {
 
   Future<String> getLoc() async{
     Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-    final coordinates = new Coordinates(position.latitude, position.longitude);
-    var addresses = await Geocoder.local.findAddressesFromCoordinates(coordinates);
-    var first = addresses.first;
-    this.address=first.addressLine;
+    var addresses= await gcode.placemarkFromCoordinates(position.latitude, position.longitude);
+    gcode.Placemark first = addresses.first;
+    this.address=first.street!+","+first.locality!+","+first.administrativeArea!+','+first.postalCode!;
     this.longe=position.longitude;
     this.latte=position.latitude;
     return "location done";
@@ -526,11 +539,22 @@ class _SellerHomeState extends State<SellerHome> {
                                             children: [
                                               Container(width : 60,height: 60,
                                                 decoration: BoxDecoration(borderRadius: BorderRadius.circular(5),
-                                                    color: Colors.black26,
-                                                    border: Border.all(color: Colors.black),
-                                                    image: DecorationImage(fit: BoxFit.fill,
-                                                        image:
-                                                        NetworkImage("http://ystall.com/assets/imgs/" +products[index].image ))),
+                                                  color: Colors.black26,
+                                                  border: Border.all(color: Colors.black),
+                                                ),
+                                                child: CachedNetworkImage(
+                                                    imageUrl: "http://ystall.com/assets/imgs/" +products[index].image,
+                                                    placeholder: (context, url) => CircularProgressIndicator(),
+                                                    errorWidget: (context, url, error) => Image(image: FileImage(ProductImage)),
+                                                    imageBuilder: (context, imageProvider) => Container(
+                                                      decoration: BoxDecoration(
+                                                        image: DecorationImage(
+                                                          image: imageProvider,
+                                                          fit: BoxFit.cover,
+                                                        ),
+                                                      ),
+                                                    )
+                                                ),
 
 
                                               ),
@@ -577,6 +601,8 @@ class _SellerHomeState extends State<SellerHome> {
                                                     ),
                                                   ),),
                                               )
+                                              ,
+
                                             ],
                                           ),
                                         );
@@ -601,6 +627,7 @@ class _SellerHomeState extends State<SellerHome> {
                         ),
 
                       ))
+                  ,
                 ],
               ),
             );
@@ -632,11 +659,12 @@ class _SellerHomeState extends State<SellerHome> {
     checkUpload(false,context);
 
     var image = await ImagePicker.pickImage(source: ImageSource.gallery);
-    ProductImage=image;
+
 
     await UploadImage(image,context);
     await Future.delayed(const Duration(seconds: 2), (){});
     checkUpload(true,context);
+    ProductImage=image;
 
   }
   checkUpload(bool isUploadDone,BuildContext context){

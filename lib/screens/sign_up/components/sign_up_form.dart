@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:geocoder/geocoder.dart';import 'package:geolocator/geolocator.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:get/get.dart';
 import 'package:ystall_shopkeeper/components/custom_surfix_icon.dart';
 import 'package:ystall_shopkeeper/components/default_button.dart';
 import 'package:ystall_shopkeeper/components/form_error.dart';
 import 'package:ystall_shopkeeper/dimensions.dart';
 import 'package:ystall_shopkeeper/screens/signin/sign_in_screen.dart';
+import 'package:geocoding/geocoding.dart' as gcode;
 
 import '../../../constants.dart';
 import '../../../server/api.dart';
@@ -78,6 +80,8 @@ class _SignUpFormState extends State<SignUpForm> {
                     _formKey.currentState!.save();
                     // if all are valid then go to success screen
                     createUser(this.name,this.email,this.password,this.address,this.longe,this.latte,this.number);
+
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Seller Added"),));
                     Navigator.pushReplacementNamed(context, SignInScreen.routeName);
                   }
                 },
@@ -241,6 +245,7 @@ class _SignUpFormState extends State<SignUpForm> {
   }
 
   Future<String> getLoc() async{
+    Geolocator.requestPermission();
     bool serviceEnabled;
     LocationPermission permission;
 
@@ -272,10 +277,11 @@ class _SignUpFormState extends State<SignUpForm> {
           'Location permissions are permanently denied, we cannot request permissions.');
     }
     Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-      final coordinates = new Coordinates(position.latitude, position.longitude);
-      var addresses = await Geocoder.local.findAddressesFromCoordinates(coordinates);
-      var first = addresses.first;
-      this.address=first.addressLine;
+
+    var addresses= await gcode.placemarkFromCoordinates(position.latitude, position.longitude);
+
+      gcode.Placemark first = addresses.first;
+     this.address=first.street!+","+first.locality!+","+first.administrativeArea!+','+first.postalCode!;
       this.longe=position.longitude;
       this.latte=position.latitude;
 
@@ -315,7 +321,6 @@ class _SignUpFormState extends State<SignUpForm> {
 
   Future<bool> createUser(String name,String email,String pass,String address, var long,var latte,String phone) async {
     await api.createContact(name,email,pass,address,long,latte,phone);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Seller Added"),));
 
     return true;
   }

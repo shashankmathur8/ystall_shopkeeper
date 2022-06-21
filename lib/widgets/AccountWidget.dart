@@ -23,7 +23,7 @@ class AccountWidget extends StatelessWidget {
         children: [
           appicon,
         SizedBox(width: 20,),
-          bigtext
+          Expanded(child: bigtext)
         ],
       ),
     );

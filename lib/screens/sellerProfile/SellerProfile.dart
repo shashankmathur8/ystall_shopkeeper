@@ -43,7 +43,7 @@ class SellerProfile extends StatelessWidget {
             },), bigtext: bigText(stringText: this.curseller.email)),
             AccountWidget(appicon: IconButton(icon: appIcon(icon: Icons.home,iconColor: Colors.deepOrangeAccent,),onPressed: ()=>{
               _displayDialog(context,"address")
-            },), bigtext: bigText(stringText: (this.curseller.address).split(",")[0])),
+            },), bigtext: bigText(stringText: (this.curseller.address))),
             AccountWidget(appicon: IconButton(icon: appIcon(icon: Icons.phone_enabled,iconColor: Colors.deepOrangeAccent,),onPressed: () {
               _displayDialog(context,"number");
             },), bigtext: bigText(stringText: this.curseller.num)),
@@ -71,7 +71,7 @@ class SellerProfile extends StatelessWidget {
             return AlertDialog(
               title: Text('Enter New Address'),
               content: TextField(
-                controller: (_textFieldController..text=(this.locAdd.split(",")[0])),
+                controller: (_textFieldController..text=(this.locAdd)),
                 textInputAction: TextInputAction.go,
                 keyboardType: TextInputType.text,
                 decoration: InputDecoration(hintText: "Address"),
@@ -82,7 +82,7 @@ class SellerProfile extends StatelessWidget {
                   onPressed: () {
                     List<Location> locations =[] ;
                     locationFromAddress(_textFieldController.text).then((value) => locations=value);
-                    this.curseller.address=_textFieldController.text.split(",")[0];
+                    this.curseller.address=_textFieldController.text;
                     api.updateAddress(this.locAdd,curseller.email,this.long,this.latte);
                     Navigator.of(context).pop();
                   },
